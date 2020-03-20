@@ -1,0 +1,9 @@
+<button class="dropdown__trigger" (click)="toggle()">
+  <span *ngIf="!selection">select</span>
+  <span *ngIf="selection">{{ selection }}</span>
+</button>
+<div class="dropdown__menu" *ngIf="isOpen">
+  <div class="dropdown__menu-item" *ngFor="let t of items" (click)="select(t)">
+    {{ t }}
+  </div>
+</div>
