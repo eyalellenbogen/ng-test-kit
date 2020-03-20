@@ -86,7 +86,7 @@ describe('DropdownComponent', () => {
         beforeEach(() => {
           ctx.pageObject.dropMenu.items[item].click();
         });
-        it('should change selection', () => {
+        it('should emit selectionChange', () => {
           const expected = ctx.host.items[item];
           expect(ctx.host.selectedItemChange).toHaveBeenCalledWith(expected);
         });
