@@ -8,7 +8,7 @@ export interface ITestContext<H> {
   fixture: ComponentFixture<H>;
   host: H;
   element: HTMLElement;
-  resolveInjectable: <T>(injectable: Type<T>) => T;
+  // resolveInjectable: <T>(injectable: Type<T>) => T;
   detectChanges: () => void;
   setHostProp: (updates: Partial<H>, detectChanges?: boolean) => void;
 }
