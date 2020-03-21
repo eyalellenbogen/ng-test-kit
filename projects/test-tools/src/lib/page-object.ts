@@ -13,12 +13,12 @@ export class PageObject<T extends HTMLElement = HTMLElement> {
     return this.__nativeElement.classList;
   }
 
-  public get dispatchEvent() {
-    return this.__nativeElement.dispatchEvent.bind(this.__nativeElement);
-  }
-
   public get parent() {
     return this.__nativeElement.parentElement;
+  }
+
+  public get clientRect() {
+    return this.__nativeElement.getBoundingClientRect();
   }
 
   // tslint:disable-next-line:variable-name
@@ -28,12 +28,8 @@ export class PageObject<T extends HTMLElement = HTMLElement> {
     }
   }
 
-  public get host() {
-    return this.__nativeElement;
-  }
-
-  public get clientRect() {
-    return this.__nativeElement.getBoundingClientRect();
+  public dispatchEvent() {
+    return this.__nativeElement.dispatchEvent.bind(this.__nativeElement) as (event: Event) => void;
   }
 
   public click() {
