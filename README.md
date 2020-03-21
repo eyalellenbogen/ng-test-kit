@@ -99,9 +99,9 @@ const context = TestContext.create(HostComponent)
   .bootstrap();
 ```
 
-Our test is set up and we are ready to write some tests!
+Our context is set up and we are ready to write some tests!
 
-#### The TestContext builder API
+    #### The TestContext builder API
 
 - `create(hostComponent: Type<THost>)` - creates a context for the host component provided
 - `withComponent(component: Type<TComponent>)` - adds access to the component instance
@@ -127,7 +127,7 @@ The context we created above contains a few properties and utility methods for c
 
 - `detectChanges` - a shortcut to `fixture.detectChanges`
 - `resetComponentReference` - queries the `debugElement` for the component instance and repopulates it and the PageObject (if applicable).
-- `setHostProp(propObject, callDetectChanges)` - a helper function to modify host properties and an option to call \* `detectChanges` as the 2nd parameter.
+- `setHostProp(propObject, callDetectChanges)` - a helper function to modify host properties and an option to call `detectChanges` as the 2nd parameter.
 
 ### Working with PageObjects
 
@@ -192,6 +192,7 @@ it('should show the correct title', () => {
 #### The PageObject public API
 
 - `__nativeElement` - access to the HTMLElement node associated with this PageObject
+- `classList` - shortcute reference to `nativeElement.classList`
 - `clientRect` - shortcut reference to `nativeElement.getBoundingClientRect()`
 - `innerText` - shortcut reference to `nativeElement.innerText`
 - `innerHTML` - shortcut reference to `nativeElement.innerHTML`
