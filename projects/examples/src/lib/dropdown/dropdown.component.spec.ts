@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { TestContext } from 'test-tools/public-api';
 import { DropdownComponent } from './dropdown.component';
 import { DropdownPageObject } from './dropdown.component.po';
-import { async } from '@angular/core/testing';
 
 @Component({
   template: `
