@@ -102,13 +102,14 @@ const context = TestContext.create(HostComponent)
 Our test is set up and we are ready to write some tests!
 
 #### The TestContext builder API
-* `create(hostComponent: Type<THost>)` - creates a context for the host component provided
-* `withComponent(component: Type<TComponent>)` - adds access to the component instance
-* `withPageObject<T extends PageObject>(pageObject: T)` - instantiates a PageObject with the type provided and adds access to it
-* `withMetaData(metadata: TestModuleMetadata)` - overrides the default module metadata used for the test
-* `useStableZone()` - waits for any async tasks triggered by component initiation to complete
-* `runBeforeCompile(func: ()=>void)` - allows to run code in a `beforeEach` statement before calling `TestBed.compileComponents()`
-* `bootstrap()` - bootstraps the test fixture, compiles the components and populates all the references.
+
+- `create(hostComponent: Type<THost>)` - creates a context for the host component provided
+- `withComponent(component: Type<TComponent>)` - adds access to the component instance
+- `withPageObject<T extends PageObject>(pageObject: T)` - instantiates a PageObject with the type provided and adds access to it
+- `withMetaData(metadata: TestModuleMetadata)` - overrides the default module metadata used for the test
+- `useStableZone()` - waits for any async tasks triggered by component initiation to complete
+- `runBeforeCompile(func: ()=>void)` - allows to run code in a `beforeEach` statement before calling `TestBed.compileComponents()`
+- `bootstrap()` - bootstraps the test fixture, compiles the components and populates all the references.
 
 ### Working with the TestContext
 
@@ -136,7 +137,7 @@ A PageObject is a representation of component elements through code in an object
 class ExpanderPageObject extends PageObject {}
 ```
 
-Extending `PageObject` gives us access to its methods such as `getElement` and `getElements`. These methods help us reference elements in the DOM.
+Extending `PageObject` gives us access to its protected methods such as `getElement` and `getElements`. These methods help us reference elements in the DOM.
 
 ```typescript
 class ExpanderPageObject extends PageObject {
@@ -170,6 +171,7 @@ class ExpanderHeader {
   }
 }
 ```
+
 Before using this PageObject we created, we first need to tell our TestContext about it.
 
 ```typescript
@@ -187,4 +189,16 @@ it('should show the correct title', () => {
 });
 ```
 
+#### The PageObject public API
 
+- `__nativeElement` - access to the HTMLElement node associated with this PageObject
+- `clientRect` - shortcut reference to `nativeElement.getBoundingClientRect()`
+- `innerText` - shortcut reference to `nativeElement.innerText`
+- `innerHTML` - shortcut reference to `nativeElement.innerHTML`
+
+##### Methods
+
+- `click()` - shortcut reference to `nativeElement.click()`
+- `dispatchEvent(event: Event)` - shortcut reference to `nativeElement.dispatchEvent(event)`
+- `focus()` - shortcut reference to `nativeElement.focus()`
+- `getAttribute(key: string)` - shortcute reference to `nativeElement.getAttribute(key)`
