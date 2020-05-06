@@ -1,12 +1,10 @@
 import { Component } from '@angular/core';
-import { TestContext } from 'test-tools/public-api';
+import { TestContextBuilder } from 'test-tools/public-api';
 import { DropdownComponent } from './dropdown.component';
 import { DropdownPageObject } from './dropdown.component.po';
 
 @Component({
-  template: `
-    <lib-dropdown [items]="items" [selection]="selectedItem" (selectionChange)="selectedItemChange($event)"></lib-dropdown>
-  `
+  template: ` <lib-dropdown [items]="items" [selection]="selectedItem" (selectionChange)="selectedItemChange($event)"></lib-dropdown> `,
 })
 class HostComponent {
   items: string[];
@@ -15,18 +13,13 @@ class HostComponent {
 }
 
 describe('DropdownComponent', () => {
-  const ctx = TestContext.create(HostComponent)
-    .withComponent(DropdownComponent)
-    .withPageObject(DropdownPageObject)
-    .bootstrap();
+  const ctx = TestContextBuilder.create(HostComponent).withComponent(DropdownComponent).withPageObject(DropdownPageObject).build();
 
   beforeEach(() => {
-    ctx.setHostProp(
-      {
-        items: ['iron man', 'hulk', 'captain america', 'thor', 'black widow', 'hawkeye']
-      },
-      true
-    );
+    ctx.bootstrap();
+    ctx.setHostProp({
+      items: ['iron man', 'hulk', 'captain america', 'thor', 'black widow', 'hawkeye'],
+    });
   });
 
   it('should create', () => {
@@ -36,7 +29,7 @@ describe('DropdownComponent', () => {
   describe('trigger', () => {
     describe('when no item is selected', () => {
       beforeEach(() => {
-        ctx.setHostProp({ selectedItem: undefined }, true);
+        ctx.setHostProp({ selectedItem: undefined });
       });
 
       it('should display "select', () => {
@@ -46,7 +39,7 @@ describe('DropdownComponent', () => {
 
     describe('when an item is selected', () => {
       beforeEach(() => {
-        ctx.setHostProp({ selectedItem: ctx.host.items[2] }, true);
+        ctx.setHostProp({ selectedItem: ctx.host.items[2] });
       });
 
       it('should display selection', () => {

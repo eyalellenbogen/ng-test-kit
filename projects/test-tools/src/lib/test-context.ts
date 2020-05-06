@@ -1,6 +1,6 @@
 import { PageObject } from './page-object';
 import { Type } from '@angular/core';
-import { TestModuleMetadata, TestBed, ComponentFixture } from '@angular/core/testing';
+import { TestModuleMetadata, TestBed, ComponentFixture, async } from '@angular/core/testing';
 import { BaseTestContext, getStableTestContext, getTestContext } from './core';
 import { By } from '@angular/platform-browser';
 
@@ -11,6 +11,11 @@ export interface ITestContext<H> {
   // resolveInjectable: <T>(injectable: Type<T>) => T;
   detectChanges: () => void;
   setHostProp: (updates: Partial<H>, detectChanges?: boolean) => void;
+  /**
+   * compiles and resets context fields with the newly created fixture
+   */
+  bootstrap: () => void;
+  bootstrapStable: () => Promise<void>;
 }
 
 export interface IComponentTestContext<T, H, P extends PageObject> extends ITestContext<H> {
@@ -19,10 +24,15 @@ export interface IComponentTestContext<T, H, P extends PageObject> extends ITest
   resetComponentReference: () => void;
 }
 
-export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H> | IComponentTestContext<C, H, P> = ITestContext<H>> {
+export class TestContextBuilder<
+  H,
+  C,
+  P extends PageObject,
+  TCtx extends ITestContext<H> | IComponentTestContext<C, H, P> = ITestContext<H>
+> {
   private component: Type<C>;
   private moduleMetadata: TestModuleMetadata;
-  private useStable: boolean;
+  // private useStable: boolean;
   private pageObject: Type<P>;
   private beforeCompileFuncs: (() => void)[] = [];
 
@@ -30,7 +40,7 @@ export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H
    * Creates a new TestContext instance from the @host type
    */
   static create<H>(host: Type<H>) {
-    return new TestContext(host);
+    return new TestContextBuilder(host);
   }
 
   constructor(private host: Type<H>) {}
@@ -48,13 +58,13 @@ export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H
    */
   public withComponent<TComp extends C>(component: Type<TComp>) {
     this.component = component;
-    return (this as unknown) as TestContext<H, TComp, P, IComponentTestContext<TComp, H, P>>;
+    return (this as unknown) as TestContextBuilder<H, TComp, P, IComponentTestContext<TComp, H, P>>;
   }
 
-  public useStableZone() {
-    this.useStable = true;
-    return this;
-  }
+  // public useStableZone() {
+  //   this.useStable = true;
+  //   return this;
+  // }
 
   /**
    * Populates the PageObject type provided after bootstrapping
@@ -64,13 +74,13 @@ export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H
       throw Error(`TestContext: Can't call withPageObject before calling withComponent`);
     }
     this.pageObject = pageObjectType as Type<P>;
-    return (this as unknown) as TestContext<H, C, TPo, IComponentTestContext<C, H, TPo>>;
+    return (this as unknown) as TestContextBuilder<H, C, TPo, IComponentTestContext<C, H, TPo>>;
   }
 
   /**
    * Will run funcToExecute in a beforeEach call right before calling TestBed.createComponent()
    */
-  public runBeforeCompile(funcToExecute: () => void) {
+  public runBeforeTestBedCompile(funcToExecute: () => void) {
     this.beforeCompileFuncs.push(funcToExecute);
     return this;
   }
@@ -78,31 +88,44 @@ export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H
   /**
    * Bootstraps a new context object
    */
-  public bootstrap() {
+  public build() {
     this.setupModule();
     this.bootstrapTestModule();
-    const context = {
-      resetComponentReference() {
-        this.populateContextComponent(this, this.component, this.pageObject);
-      }
-    } as TCtx;
 
-    if (this.useStable) {
-      beforeEach(done => {
-        getStableTestContext(this.host).then(ctx => {
-          this.populateContext(ctx, context);
-          ctx.detectChanges();
-          done();
-        });
-      });
-    } else {
-      beforeEach(() => {
-        const ctx = getTestContext(this.host);
-        this.populateContext(ctx, context);
-        ctx.detectChanges();
-      });
-    }
+    const context = this.createContext();
     return context;
+  }
+
+  private createContext() {
+    const context = {} as TCtx;
+    context.bootstrap = () => {
+      if (context.fixture) {
+        context.fixture.destroy();
+      }
+      this.getAndPopulateContext(context);
+    };
+    context.bootstrapStable = async () => {
+      if (context.fixture) {
+        context.fixture.destroy();
+      }
+      await this.getAndPopulateStableContext(context);
+    };
+    return context;
+  }
+
+  private populateContext(baseContext: BaseTestContext<H>, targetContext: TCtx) {
+    populateContext(baseContext, targetContext, this.component, this.pageObject);
+    baseContext.detectChanges();
+  }
+
+  private async getAndPopulateStableContext(context: TCtx) {
+    const ctx = await getStableTestContext(this.host);
+    this.populateContext(ctx, context);
+  }
+
+  private getAndPopulateContext(context: TCtx) {
+    const ctx = getTestContext(this.host);
+    this.populateContext(ctx, context);
   }
 
   private setupModule() {
@@ -118,48 +141,87 @@ export class TestContext<H, C, P extends PageObject, TCtx extends ITestContext<H
     }
   }
 
-  private bootstrapTestModule() {
-    beforeEach(done =>
-      (async () => {
-        TestBed.configureTestingModule(this.moduleMetadata);
-        this.beforeCompileFuncs.forEach(fn => {
-          fn();
-        });
-        await TestBed.compileComponents();
-        done();
-      })()
-        .then(done)
-        .catch(done.fail)
-    );
-  }
-
-  private populateContext(sourceContext: BaseTestContext<H>, targetContext: ITestContext<H> | IComponentTestContext<C, H, P>) {
-    targetContext.fixture = sourceContext.fixture;
-    targetContext.detectChanges = sourceContext.detectChanges;
-    targetContext.host = sourceContext.component;
-    targetContext.element = sourceContext.element;
-
-    targetContext.setHostProp = (updates, detectChanges?: boolean) => {
-      Object.keys(updates).forEach(k => {
-        const key = k as keyof H;
-        targetContext.host[key] = updates[key];
+  private async bootstrapTestModule() {
+    beforeEach(async(async () => {
+      TestBed.configureTestingModule(this.moduleMetadata);
+      this.beforeCompileFuncs.forEach((fn) => {
+        fn();
       });
-      if (detectChanges) {
-        targetContext.detectChanges();
-      }
-    };
-
-    this.populateContextComponent(targetContext as IComponentTestContext<C, H, P>);
+      await TestBed.compileComponents();
+    }));
   }
 
-  private populateContextComponent(ctx: IComponentTestContext<C, H, P>) {
-    if (!this.component) {
-      return;
+  // private populateContext2(sourceContext: BaseTestContext<H>, targetContext: ITestContext<H> | IComponentTestContext<C, H, P>) {
+  //   targetContext.fixture = sourceContext.fixture;
+  //   targetContext.detectChanges = sourceContext.detectChanges;
+  //   targetContext.host = sourceContext.component;
+  //   targetContext.element = sourceContext.element;
+
+  //   targetContext.setHostProp = (updates, detectChanges = true) => {
+  //     Object.keys(updates).forEach((k) => {
+  //       const key = k as keyof H;
+  //       targetContext.host[key] = updates[key];
+  //     });
+  //     if (detectChanges) {
+  //       targetContext.detectChanges();
+  //     }
+  //   };
+
+  //   this.populateContextComponent(targetContext as IComponentTestContext<C, H, P>);
+  // }
+
+  // private populateContextComponent(ctx: IComponentTestContext<C, H, P>) {
+  //   if (!this.component) {
+  //     return;
+  //   }
+  //   const testedComponent = ctx.fixture.debugElement.query(By.directive(this.component));
+  //   ctx.component = testedComponent.componentInstance;
+  //   // ctx.resetComponentReference = () => {
+  //   //   this.populateContextComponent(ctx);
+  //   // };
+
+  //   if (this.pageObject) {
+  //     ctx.pageObject = new this.pageObject(testedComponent.nativeElement);
+  //   }
+  // }
+}
+
+function populateContext<C, H, P extends PageObject>(
+  sourceContext: BaseTestContext<H>,
+  targetContext: ITestContext<H> | IComponentTestContext<C, H, P>,
+  component: Type<C>,
+  pageObject: Type<P>
+) {
+  targetContext.fixture = sourceContext.fixture;
+  targetContext.detectChanges = sourceContext.detectChanges;
+  targetContext.host = sourceContext.component;
+  targetContext.element = sourceContext.element;
+
+  targetContext.setHostProp = (updates, detectChanges = true) => {
+    Object.keys(updates).forEach((k) => {
+      const key = k as keyof H;
+      targetContext.host[key] = updates[key];
+    });
+    if (detectChanges) {
+      targetContext.detectChanges();
     }
-    const testedComponent = ctx.fixture.debugElement.query(By.directive(this.component));
-    ctx.component = testedComponent.componentInstance;
-    if (this.pageObject) {
-      ctx.pageObject = new this.pageObject(testedComponent.nativeElement);
-    }
+  };
+
+  populateContextComponent(targetContext as IComponentTestContext<C, H, P>, component, pageObject);
+}
+
+function populateContextComponent<C, H, P extends PageObject>(
+  ctx: IComponentTestContext<C, H, P>,
+  component: Type<C>,
+  pageObject: Type<P>
+) {
+  const testedComponent = ctx.fixture.debugElement.query(By.directive(component));
+  ctx.component = testedComponent.componentInstance;
+  // ctx.resetComponentReference = () => {
+  //   this.populateContextComponent(ctx);
+  // };
+
+  if (pageObject) {
+    ctx.pageObject = new pageObject(testedComponent.nativeElement);
   }
 }
