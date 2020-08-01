@@ -99,15 +99,15 @@ export class TestContextBuilder<
   private createContext() {
     const context = {} as TCtx;
     context.bootstrap = () => {
-      if (context.fixture) {
-        context.fixture.destroy();
-      }
+      // if (context.fixture) {
+      //   context.fixture.destroy();
+      // }
       this.getAndPopulateContext(context);
     };
     context.bootstrapStable = async () => {
-      if (context.fixture) {
-        context.fixture.destroy();
-      }
+      // if (context.fixture) {
+      //   context.fixture.destroy();
+      // }
       await this.getAndPopulateStableContext(context);
     };
     return context;

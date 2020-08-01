@@ -1,7 +1,7 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async } from '@angular/core/testing';
 
 import { InitComponent } from './init.component';
-import { TestContextBuilder, IComponentTestContext } from 'test-tools/public-api';
+import { TestContextBuilder } from 'test-tools/public-api';
 import { Component } from '@angular/core';
 import { DataService } from './data.service';
 
@@ -34,7 +34,9 @@ describe('InitCompComponent', async () => {
   });
   describe('when service resolves', () => {
     beforeEach(async(async () => {
-      spyOn(dataMock, 'doWork').and.returnValue(Promise.resolve());
+      spyOn(dataMock, 'doWork').and.callFake(() => {
+        return Promise.resolve();
+      });
       await ctx.bootstrapStable();
     }));
     it('should show content', () => {
