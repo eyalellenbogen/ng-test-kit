@@ -33,7 +33,7 @@ describe('DropdownComponent', () => {
       });
 
       it('should display "select', () => {
-        expect(ctx.pageObject.trigger.innerText).toBe('select');
+        expect(ctx.pageObject.trigger.textContent).toBe('select');
       });
     });
 
@@ -43,7 +43,7 @@ describe('DropdownComponent', () => {
       });
 
       it('should display selection', () => {
-        expect(ctx.pageObject.trigger.innerText).toBe(ctx.host.selectedItem);
+        expect(ctx.pageObject.trigger.textContent).toBe(ctx.host.selectedItem);
       });
     });
 

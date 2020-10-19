@@ -5,6 +5,10 @@ export class PageObject<T extends HTMLElement = HTMLElement> {
     return this.__nativeElement.innerText;
   }
 
+  public get textContent() {
+    return this.__nativeElement.textContent;
+  }
+
   public get innerHTML() {
     return this.__nativeElement.innerHTML;
   }
@@ -67,13 +71,13 @@ export class PageObject<T extends HTMLElement = HTMLElement> {
   protected getElements<TElement extends HTMLElement, TPageObject extends PageObject<TElement>>(
     selector: string,
     type?: Type<TPageObject>,
-    contents?: (Type<PageObject> | undefined)[],
+    contents?: Type<PageObject>[],
     container?: HTMLElement
   ): TPageObject[] {
     const els = this.getHtmlElements<TElement>(selector, container);
 
     contents = contents || [];
-    return els.map(x => {
+    return els.map((x) => {
       return type ? new type(x, ...contents) : (new PageObject<HTMLElement>(x) as TPageObject);
     });
   }
@@ -82,7 +86,7 @@ export class PageObject<T extends HTMLElement = HTMLElement> {
     const root = container || this.__nativeElement;
     const nodes = root.querySelectorAll(selector);
     const res: TElement[] = [];
-    nodes.forEach(x => {
+    nodes.forEach((x) => {
       res.push(x as TElement);
     });
 

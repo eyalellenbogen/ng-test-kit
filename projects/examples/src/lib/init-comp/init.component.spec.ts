@@ -11,9 +11,9 @@ import { DataService } from './data.service';
 class HostComponent {}
 
 const dataMock = {
-  doWork: () => {
+  doWork: jest.fn().mockImplementation(() => {
     return Promise.reject() as Promise<void>;
-  },
+  }),
 };
 
 describe('InitCompComponent', async () => {
@@ -34,7 +34,7 @@ describe('InitCompComponent', async () => {
   });
   describe('when service resolves', () => {
     beforeEach(async(async () => {
-      spyOn(dataMock, 'doWork').and.callFake(() => {
+      dataMock.doWork.mockImplementationOnce(() => {
         return Promise.resolve();
       });
       await ctx.bootstrapStable();
