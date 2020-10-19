@@ -65,11 +65,6 @@ export class TestContextBuilder<
     return (this as unknown) as TestContextBuilder<H, TComp, P, IComponentTestContext<TComp, H, P>>;
   }
 
-  // public useStableZone() {
-  //   this.useStable = true;
-  //   return this;
-  // }
-
   /**
    * Populates the PageObject type provided after bootstrapping
    */
@@ -103,15 +98,9 @@ export class TestContextBuilder<
   private createContext() {
     const context = {} as TCtx;
     context.bootstrap = () => {
-      // if (context.fixture) {
-      //   context.fixture.destroy();
-      // }
       this.getAndPopulateContext(context);
     };
     context.bootstrapStable = async () => {
-      // if (context.fixture) {
-      //   context.fixture.destroy();
-      // }
       await this.getAndPopulateStableContext(context);
     };
     return context;
@@ -154,40 +143,6 @@ export class TestContextBuilder<
       await TestBed.compileComponents();
     }));
   }
-
-  // private populateContext2(sourceContext: BaseTestContext<H>, targetContext: ITestContext<H> | IComponentTestContext<C, H, P>) {
-  //   targetContext.fixture = sourceContext.fixture;
-  //   targetContext.detectChanges = sourceContext.detectChanges;
-  //   targetContext.host = sourceContext.component;
-  //   targetContext.element = sourceContext.element;
-
-  //   targetContext.setHostProp = (updates, detectChanges = true) => {
-  //     Object.keys(updates).forEach((k) => {
-  //       const key = k as keyof H;
-  //       targetContext.host[key] = updates[key];
-  //     });
-  //     if (detectChanges) {
-  //       targetContext.detectChanges();
-  //     }
-  //   };
-
-  //   this.populateContextComponent(targetContext as IComponentTestContext<C, H, P>);
-  // }
-
-  // private populateContextComponent(ctx: IComponentTestContext<C, H, P>) {
-  //   if (!this.component) {
-  //     return;
-  //   }
-  //   const testedComponent = ctx.fixture.debugElement.query(By.directive(this.component));
-  //   ctx.component = testedComponent.componentInstance;
-  //   // ctx.resetComponentReference = () => {
-  //   //   this.populateContextComponent(ctx);
-  //   // };
-
-  //   if (this.pageObject) {
-  //     ctx.pageObject = new this.pageObject(testedComponent.nativeElement);
-  //   }
-  // }
 }
 
 function populateContext<C, H, P extends PageObject>(
