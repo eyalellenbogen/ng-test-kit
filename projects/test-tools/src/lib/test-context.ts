@@ -15,6 +15,10 @@ export interface ITestContext<H> {
    * compiles and resets context fields with the newly created fixture
    */
   bootstrap: () => void;
+  /**
+   * compiles and resets context fields with the newly created fixture and
+   * then waits for zone to have no more tasks in queue
+   */
   bootstrapStable: () => Promise<void>;
 }
 
@@ -86,7 +90,7 @@ export class TestContextBuilder<
   }
 
   /**
-   * Bootstraps a new context object
+   * Builds a new context object
    */
   public build() {
     this.setupModule();

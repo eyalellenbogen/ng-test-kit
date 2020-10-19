@@ -38,7 +38,11 @@ Next, we write our describe function and add the TestContext. The `TestContext.c
 
 ```typescript
 describe('ExpanderComponent', () => {
-  const context = TestContext.create(HostComponent).bootstrap();
+  const context = TestContext.create(HostComponent).build();
+
+  beforeEach(async () => {
+    await context.bootstrap();
+  });
 
   it('should create', () => {
     expect(context.host).toBeDefined();
@@ -52,7 +56,11 @@ However, we are testing a component and would like our TestContext to be aware o
 describe('ExpanderComponent', () => {
   const context = TestContext.create(HostComponent)
     .withComponent(ExpanderComponent) // <-- adding the component
-    .bootstrap();
+    .build();
+  
+  beforeEach(async () => {
+    await context.bootstrap();
+  });
 
   it('should create', () => {
     expect(context.component).toBeDefined();
@@ -71,7 +79,11 @@ describe('ExpanderComponent', () => {
       providers: [SomeProvider],
       declarations: [HostComponent]
     })
-    .bootstrap();
+    .build();
+
+  beforeEach(async () => {
+    await context.bootstrap();
+  });
 
   it('should create', () => {
     expect(context.component).toBeDefined();
@@ -79,24 +91,28 @@ describe('ExpanderComponent', () => {
 });
 ```
 
-If we need to run some code before the library calls `TestBed.compileComponents()` then we can use `runBeforeCompile`.
+If we need to run some code before the library calls `TestBed.compileComponents()` then we can use `runBeforeTestBedCompile`.
 
 ```typescript
 const context = TestContext.create(HostComponent)
   .withComponent(ExpanderComponent)
-  .runBeforeCompile(() => {
+  .runBeforeTestBedCompile(() => {
     // here goes code that runs in a beforeEach
   })
-  .bootstrap();
+  .build();
 ```
 
-We can also call `useStableZone` if our component triggers some zone tasks in its initialization code.
+We can also call `bootstrapStable` if our component triggers some zone tasks in its initialization code.
 
 ```typescript
 const context = TestContext.create(HostComponent)
   .withComponent(ExpanderComponent)
-  .useStableZone()
-  .bootstrap();
+  .build();
+
+  beforeEach(async () => {
+    await context.bootstrapStable();
+  });
+
 ```
 
 Our context is set up and we are ready to write some tests!
@@ -109,7 +125,8 @@ Our context is set up and we are ready to write some tests!
 - `withMetaData(metadata: TestModuleMetadata)` - overrides the default module metadata used for the test
 - `useStableZone()` - waits for any async tasks triggered by component initiation to complete
 - `runBeforeCompile(func: ()=>void)` - allows to run code in a `beforeEach` statement before calling `TestBed.compileComponents()`
-- `bootstrap()` - bootstraps the test fixture, compiles the components and populates all the references.
+- `build()` - builds a new text context for us to use
+- `bootstrap()` - compiles and resets context fields with the newly created fixture
 
 ### Working with the TestContext
 
