@@ -1,4 +1,4 @@
-import { PageObject } from 'test-tools/public-api';
+import { PageObject } from 'test-kit/public-api';
 
 export class DropdownPageObject extends PageObject {
   get trigger() {

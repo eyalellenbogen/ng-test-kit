@@ -1,5 +1,5 @@
 {
-  "name": "ng-test-tools",
+  "name": "ng-test-kit",
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",

@@ -1,11 +1,11 @@
 {
-  "name": "test-tools",
+  "name": "ng-test-kit",
   "version": "0.0.1",
   "dependencies": {
     "tslib": "^2.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "^9.0.7",
-    "@angular/core": "^9.0.7"
+    "@angular/common": "^10.1.6",
+    "@angular/core": "^10.1.6"
   }
 }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TestContextBuilder } from 'test-tools/public-api';
+import { TestContextBuilder } from 'test-kit/public-api';
 import { DropdownComponent } from './dropdown.component';
 import { DropdownPageObject } from './dropdown.component.po';
 

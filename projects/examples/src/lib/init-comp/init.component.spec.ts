@@ -1,7 +1,7 @@
 import { waitForAsync } from '@angular/core/testing';
 
 import { InitComponent } from './init.component';
-import { TestContextBuilder } from 'test-tools/public-api';
+import { TestContextBuilder } from 'test-kit/public-api';
 import { Component } from '@angular/core';
 import { DataService } from './data.service';
 

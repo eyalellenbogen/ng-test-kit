@@ -13,8 +13,8 @@
     "target": "es2015",
     "lib": ["es2018", "dom"],
     "paths": {
-      "test-tools": ["projects/test-tools/src"],
-      "test-tools/*": ["projects/test-tools/src/*"]
+      "test-kit": ["projects/test-kit/src"],
+      "test-kit/*": ["projects/test-kit/src/*"]
     }
   },
   "angularCompilerOptions": {

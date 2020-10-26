@@ -3,36 +3,36 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "test-tools": {
+    "test-kit": {
       "projectType": "library",
-      "root": "projects/test-tools",
-      "sourceRoot": "projects/test-tools/src",
+      "root": "projects/test-kit",
+      "sourceRoot": "projects/test-kit/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-ng-packagr:build",
           "options": {
-            "tsConfig": "projects/test-tools/tsconfig.lib.json",
-            "project": "projects/test-tools/ng-package.json"
+            "tsConfig": "projects/test-kit/tsconfig.lib.json",
+            "project": "projects/test-kit/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/test-tools/tsconfig.lib.prod.json"
+              "tsConfig": "projects/test-kit/tsconfig.lib.prod.json"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/test-tools/src/test.ts",
-            "tsConfig": "projects/test-tools/tsconfig.spec.json",
-            "karmaConfig": "projects/test-tools/karma.conf.js"
+            "main": "projects/test-kit/src/test.ts",
+            "tsConfig": "projects/test-kit/tsconfig.spec.json",
+            "karmaConfig": "projects/test-kit/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
-            "tsConfig": ["projects/test-tools/tsconfig.lib.json", "projects/test-tools/tsconfig.spec.json"],
+            "tsConfig": ["projects/test-kit/tsconfig.lib.json", "projects/test-kit/tsconfig.spec.json"],
             "exclude": ["**/node_modules/**"]
           }
         }
