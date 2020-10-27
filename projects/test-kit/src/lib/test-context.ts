@@ -1,13 +1,17 @@
 import { PageObject } from './page-object';
 import { Type } from '@angular/core';
-import { TestModuleMetadata, TestBed, ComponentFixture, async } from '@angular/core/testing';
+import { TestModuleMetadata, TestBed, ComponentFixture, async, waitForAsync } from '@angular/core/testing';
 import { BaseTestContext, getStableTestContext, getTestContext } from './core';
 import { By } from '@angular/platform-browser';
+import { ComponentHarness, HarnessLoader, HarnessQuery } from '@angular/cdk/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 
 export interface ITestContext<H> {
   fixture: ComponentFixture<H>;
   host: H;
   element: HTMLElement;
+  harnessLoader: HarnessLoader;
+  harnessRootLoader: HarnessLoader;
   detectChanges: () => void;
   setHostProp: (updates: Partial<H>, detectChanges?: boolean) => void;
   /**
@@ -21,9 +25,10 @@ export interface ITestContext<H> {
   bootstrapStable: () => Promise<void>;
 }
 
-export interface IComponentTestContext<T, H, P extends PageObject> extends ITestContext<H> {
+export interface IComponentTestContext<T, H, P extends PageObject, CH extends ComponentHarness> extends ITestContext<H> {
   component: T;
   pageObject: P;
+  componentHarness: CH;
   resetComponentReference: () => void;
 }
 
@@ -31,11 +36,12 @@ export class TestContextBuilder<
   H,
   C,
   P extends PageObject,
-  TCtx extends ITestContext<H> | IComponentTestContext<C, H, P> = ITestContext<H>
+  CH extends ComponentHarness = ComponentHarness,
+  TCtx extends ITestContext<H> | IComponentTestContext<C, H, P, CH> = ITestContext<H>
 > {
   private component: Type<C>;
+  private componentHarness: HarnessQuery<CH>;
   private moduleMetadata: TestModuleMetadata;
-  // private useStable: boolean;
   private pageObject: Type<P>;
   private beforeCompileFuncs: (() => void)[] = [];
 
@@ -61,7 +67,14 @@ export class TestContextBuilder<
    */
   public withComponent<TComp extends C>(component: Type<TComp>) {
     this.component = component;
-    return (this as unknown) as TestContextBuilder<H, TComp, P, IComponentTestContext<TComp, H, P>>;
+    return (this as unknown) as TestContextBuilder<H, TComp, P, CH, IComponentTestContext<TComp, H, P, CH>>;
+  }
+
+  public withHarness<TCH extends CH>(componentHarnessType: HarnessQuery<TCH>) {
+    if (!this.component) {
+      throw Error(`TestContext: Can't call withPageObject before calling withComponent`);
+    }
+    this.componentHarness = componentHarnessType as HarnessQuery<TCH>;
   }
 
   /**
@@ -72,7 +85,7 @@ export class TestContextBuilder<
       throw Error(`TestContext: Can't call withPageObject before calling withComponent`);
     }
     this.pageObject = pageObjectType as Type<P>;
-    return (this as unknown) as TestContextBuilder<H, C, TPo, IComponentTestContext<C, H, TPo>>;
+    return (this as unknown) as TestContextBuilder<H, C, TPo, CH, IComponentTestContext<C, H, TPo, CH>>;
   }
 
   /**
@@ -106,7 +119,7 @@ export class TestContextBuilder<
   }
 
   private populateContext(baseContext: BaseTestContext<H>, targetContext: TCtx) {
-    populateContext(baseContext, targetContext, this.component, this.pageObject);
+    populateContext(baseContext, targetContext, this.component, this.pageObject, this.componentHarness);
     baseContext.detectChanges();
   }
 
@@ -134,21 +147,24 @@ export class TestContextBuilder<
   }
 
   private async bootstrapTestModule() {
-    beforeEach(async(async () => {
-      TestBed.configureTestingModule(this.moduleMetadata);
-      this.beforeCompileFuncs.forEach((fn) => {
-        fn();
-      });
-      await TestBed.compileComponents();
-    }));
+    beforeEach(
+      waitForAsync(async () => {
+        TestBed.configureTestingModule(this.moduleMetadata);
+        this.beforeCompileFuncs.forEach((fn) => {
+          fn();
+        });
+        await TestBed.compileComponents();
+      })
+    );
   }
 }
 
-function populateContext<C, H, P extends PageObject>(
+function populateContext<C, H, P extends PageObject, CH extends ComponentHarness>(
   sourceContext: BaseTestContext<H>,
-  targetContext: ITestContext<H> | IComponentTestContext<C, H, P>,
+  targetContext: ITestContext<H> | IComponentTestContext<C, H, P, CH>,
   component: Type<C>,
-  pageObject: Type<P>
+  pageObject: Type<P>,
+  componentHarness: HarnessQuery<CH>
 ) {
   targetContext.fixture = sourceContext.fixture;
   targetContext.detectChanges = sourceContext.detectChanges;
@@ -165,19 +181,24 @@ function populateContext<C, H, P extends PageObject>(
     }
   };
 
-  populateContextComponent(targetContext as IComponentTestContext<C, H, P>, component, pageObject);
+  populateContextComponent(targetContext as IComponentTestContext<C, H, P, CH>, component, pageObject, componentHarness);
 }
 
-function populateContextComponent<C, H, P extends PageObject>(
-  ctx: IComponentTestContext<C, H, P>,
+async function populateContextComponent<C, H, P extends PageObject, CH extends ComponentHarness>(
+  ctx: IComponentTestContext<C, H, P, CH>,
   component: Type<C>,
-  pageObject: Type<P>
+  pageObject: Type<P>,
+  componetHarness: HarnessQuery<CH>
 ) {
   const testedComponent = ctx.fixture.debugElement.query(By.directive(component));
   ctx.component = testedComponent.componentInstance;
-  // ctx.resetComponentReference = () => {
-  //   this.populateContextComponent(ctx);
-  // };
+
+  if (componetHarness) {
+    ctx.harnessLoader = TestbedHarnessEnvironment.loader(ctx.fixture);
+    ctx.harnessRootLoader = TestbedHarnessEnvironment.documentRootLoader(ctx.fixture);
+
+    ctx.componentHarness = await ctx.harnessLoader.getHarness(componetHarness);
+  }
 
   if (pageObject) {
     ctx.pageObject = new pageObject(testedComponent.nativeElement);
