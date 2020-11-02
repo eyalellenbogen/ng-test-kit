@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { TestContextBuilder } from 'test-kit/public-api';
 import { DropdownComponent } from './dropdown.component';
-import { DropdownPageObject } from './dropdown.component.po';
+import { DropdownHarness } from './dropdown.component.harness';
 
 @Component({
   template: ` <lib-dropdown [items]="items" [selection]="selectedItem" (selectionChange)="selectedItemChange($event)"></lib-dropdown> `,
@@ -13,10 +13,10 @@ class HostComponent {
 }
 
 describe('DropdownComponent', () => {
-  const ctx = TestContextBuilder.create(HostComponent).withComponent(DropdownComponent).withPageObject(DropdownPageObject).build();
+  const ctx = TestContextBuilder.create(HostComponent).withComponent(DropdownComponent).withHarness(DropdownHarness).build();
 
-  beforeEach(() => {
-    ctx.bootstrap();
+  beforeEach(async () => {
+    await ctx.bootstrap();
     ctx.setHostProp({
       items: ['iron man', 'hulk', 'captain america', 'thor', 'black widow', 'hawkeye'],
     });
@@ -32,8 +32,9 @@ describe('DropdownComponent', () => {
         ctx.setHostProp({ selectedItem: undefined });
       });
 
-      it('should display "select', () => {
-        expect(ctx.pageObject.trigger.textContent).toBe('select');
+      it('should display "select', async () => {
+        const label = await ctx.harness.getTriggerLabel();
+        expect(label).toBe('select');
       });
     });
 
@@ -42,41 +43,49 @@ describe('DropdownComponent', () => {
         ctx.setHostProp({ selectedItem: ctx.host.items[2] });
       });
 
-      it('should display selection', () => {
-        expect(ctx.pageObject.trigger.textContent).toBe(ctx.host.selectedItem);
+      it('should display selection', async () => {
+        const label = await ctx.harness.getTriggerLabel();
+        expect(label).toBe(ctx.host.selectedItem);
       });
     });
 
     describe('on click', () => {
       describe('when closed', () => {
-        beforeEach(() => {
-          ctx.pageObject.trigger.click();
+        beforeEach(async () => {
+          await ctx.harness.toggle();
         });
-        it('should open', () => {
-          expect(ctx.pageObject.dropMenu).toBeTruthy();
+        it('should open', async () => {
+          const el = await ctx.harness.getDropMenuElement();
+          expect(el).toBeDefined();
         });
       });
       describe('when open', () => {
-        beforeEach(() => {
+        beforeEach(async () => {
+          // open programatically
           ctx.component.isOpen = true;
           ctx.detectChanges();
-          ctx.pageObject.trigger.click();
+
+          // close
+          await ctx.harness.toggle();
         });
-        it('should close', () => {
-          expect(ctx.pageObject.dropMenu).toBeFalsy();
+        it('should close', async () => {
+          const el = await ctx.harness.getDropMenuElement();
+          expect(el).toBeNull();
         });
       });
     });
 
     describe('menu', () => {
-      beforeEach(() => {
-        ctx.pageObject.trigger.click();
+      beforeEach(async () => {
+        await ctx.harness.toggle();
         spyOn(ctx.host, 'selectedItemChange');
       });
       describe('when item clicked', () => {
         const item = 2;
-        beforeEach(() => {
-          ctx.pageObject.dropMenu.items[item].click();
+        beforeEach(async () => {
+          const dropMenu = await ctx.harness.getDropMenuElement();
+          const items = await dropMenu.items();
+          await items[item].click();
         });
         it('should emit selectionChange', () => {
           const expected = ctx.host.items[item];
