@@ -25,7 +25,6 @@ export interface ITestContext<H> {
 export interface IComponentTestContext<T, H, CH extends ComponentHarness> extends ITestContext<H> {
   component: T;
   harness: CH;
-  resetComponentReference: () => void;
 }
 
 export class TestContextBuilder<
