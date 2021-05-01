@@ -17,17 +17,12 @@ const dataMock = {
 };
 
 describe('InitCompComponent', async () => {
-  const ctx = TestContextBuilder.create(HostComponent)
-    .withComponent(InitComponent)
+  const ctx = TestContextBuilder.forHostedComponent(HostComponent, InitComponent)
     .withMetadata({
       declarations: [HostComponent, InitComponent],
       providers: [{ provide: DataService, useValue: dataMock }],
     })
-    .build();
-
-  beforeEach(async () => {
-    await ctx.bootstrapStable();
-  });
+    .buildAndBootstrap(true);
 
   it('should create', () => {
     expect(ctx.component).toBeTruthy();

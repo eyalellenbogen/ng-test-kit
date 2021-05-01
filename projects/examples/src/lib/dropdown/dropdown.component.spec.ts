@@ -13,11 +13,10 @@ class HostComponent {
 }
 
 describe('DropdownComponent', () => {
-  const ctx = TestContextBuilder.create(HostComponent).withComponent(DropdownComponent).withHarness(DropdownHarness).build();
+  const ctx = TestContextBuilder.forHostedComponent(HostComponent, DropdownComponent).withHarness(DropdownHarness).buildAndBootstrap();
 
   beforeEach(async () => {
-    await ctx.bootstrap();
-    ctx.setHostProp({
+    ctx.setHostProps({
       items: ['iron man', 'hulk', 'captain america', 'thor', 'black widow', 'hawkeye'],
     });
   });
@@ -29,7 +28,7 @@ describe('DropdownComponent', () => {
   describe('trigger', () => {
     describe('when no item is selected', () => {
       beforeEach(() => {
-        ctx.setHostProp({ selectedItem: undefined });
+        ctx.setHostProps({ selectedItem: undefined });
       });
 
       it('should display "select', async () => {
@@ -40,7 +39,7 @@ describe('DropdownComponent', () => {
 
     describe('when an item is selected', () => {
       beforeEach(() => {
-        ctx.setHostProp({ selectedItem: ctx.host.items[2] });
+        ctx.setHostProps({ selectedItem: ctx.host.items[2] });
       });
 
       it('should display selection', async () => {

@@ -1,1 +1,1 @@
-export * from './lib/test-context';
+export * from './lib/test-kit';
