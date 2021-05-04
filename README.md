@@ -34,11 +34,11 @@ class HostComponent {
 }
 ```
 
-Next, we write our describe function and add the TestContext. The `TestContext.create()` takes one argument which is our host component. If we were testing a directive our setup would end here:
+Next, we write our describe function and add the TestContext. The `TestContextBuilder.forComponent()` takes one argument which is our component. If we were testing a directive our setup would end here:
 
 ```typescript
 describe('ExpanderComponent', () => {
-  const context = TestContext.create(HostComponent).build();
+  const context = TestContextBuilder.forComponent(HostComponent).build();
 
   beforeEach(async () => {
     await context.bootstrap();
@@ -54,13 +54,8 @@ However, we are testing a component and would like our TestContext to be aware o
 
 ```typescript
 describe('ExpanderComponent', () => {
-  const context = TestContext.create(HostComponent)
-    .withComponent(ExpanderComponent) // <-- adding the component
-    .build();
-
-  beforeEach(async () => {
-    await context.bootstrap();
-  });
+  const context = TestContextBuilder.forHostedComponent(HostComponent, ExpanderComponent)
+    .buildAndBootstrap(); // shortcut to bootstrapping in a beforeEach
 
   it('should create', () => {
     expect(context.component).toBeDefined();
@@ -72,8 +67,7 @@ If our component has dependencies we can provide a module metadata that includes
 
 ```typescript
 describe('ExpanderComponent', () => {
-  const context = TestContext.create(HostComponent)
-    .withComponent(ExpanderComponent) // <-- adding the component
+  const context = TestContextBuilder.forHostedComponent(HostComponent, ExpanderComponent)
     .withMetaData({
       imports: [SomeModule],
       providers: [SomeProvider],
@@ -94,8 +88,7 @@ describe('ExpanderComponent', () => {
 If we need to run some code before the library calls `TestBed.compileComponents()` then we can use `runBeforeTestBedCompile`.
 
 ```typescript
-const context = TestContext.create(HostComponent)
-  .withComponent(ExpanderComponent)
+const context = TestContext.forHostedComponent(HostComponent, ExpanderComponent)
   .runBeforeTestBedCompile(() => {
     // here goes code that runs in a beforeEach
   })
@@ -105,7 +98,7 @@ const context = TestContext.create(HostComponent)
 We can also call `bootstrapStable` if our component triggers some zone tasks in its initialization code.
 
 ```typescript
-const context = TestContext.create(HostComponent).withComponent(ExpanderComponent).build();
+const context = TestContext.forHostedComponent(HostComponent, ExpanderComponent).build();
 
 beforeEach(async () => {
   await context.bootstrapStable();
@@ -116,14 +109,13 @@ Our context is set up and we are ready to write some tests!
 
     #### The TestContext builder API
 
-- `create(hostComponent: Type<THost>)` - creates a context for the host component provided
-- `withComponent(component: Type<TComponent>)` - adds access to the component instance
+- `forComponent(component: Type<TComp>)` - creates a context for the host component provided
+- `forHostedComponent(host: Type<THost>, component: Type<TComp>)` - creates a context for the host and the component provided
 - `withHarness<T extends ComponentHarness>(harness: T)` - instantiates a ComponentHarness with the type provided and adds access to it
 - `withMetaData(metadata: TestModuleMetadata)` - overrides the default module metadata used for the test
-- `useStableZone()` - waits for any async tasks triggered by component initiation to complete
 - `runBeforeCompile(func: ()=>void)` - allows to run code in a `beforeEach` statement before calling `TestBed.compileComponents()`
 - `build()` - builds a new text context for us to use
-- `bootstrap()` - compiles and resets context fields with the newly created fixture
+- `buildAndBootstrap()` - builds a new text context and bootstraps it in a `beforeEach()`
 
 ### Working with the TestContext
 
@@ -139,6 +131,8 @@ The context we created above contains a few properties and utility methods for c
 
 #### Methods
 
+- `bootstrap` - bootstraps the fixture and the context (to be used in a `beforeEach`)
+- `bootstrapStable` - bootstraps the fixture and the context and waits for zone task queue to empty (to be used in a `beforeEach`)
 - `detectChanges` - a shortcut to `fixture.detectChanges`
 - `setHostProp(propObject, callDetectChanges)` - a helper function to modify host properties and an option to call `detectChanges` as the 2nd parameter.
 
@@ -158,7 +152,7 @@ For more information about using Harnesses see the [Angular CDK Harnesses](https
 In order to use our Harness we first need to tell our TestContext about it.
 
 ```typescript
-const context = TestContext.create(HostComponent).withComponent(ExpanderComponent).withHarness(ExpanderHarness).bootstrap();
+const context = TestContextBuilder.forHostedComponent(HostComponent, ExpanderComponent).withHarness(ExpanderHarness).buildAndBootstrap();
 ```
 
 Then, in our tests, we can use this Harness to navigate to the element we are monitoring.
